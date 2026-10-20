@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>100k Markov Chat Bot</title>
+    <title>100k Markov Chat Bot with Memory</title>
     <style>
         body {
             font-family: 'Courier New', Courier, monospace;
@@ -90,15 +90,15 @@
 </head>
 <body>
 
-    <h1>🤖 Interactive Markov Bot</h1>
+    <h1>🤖 Markov Bot (Second-Order Memory)</h1>
     
     <div class="stats">
-        <strong>Locked State Matrix:</strong> 10,000 words | 100,000 connections (Read-Only)
+        <strong>Locked State Matrix:</strong> 10,000 words | 100,000 contextual state pairs (Read-Only)
     </div>
 
     <div id="chat-container">
         <div class="message bot-message">
-            System initialized. I am online. Send a message to read my probability tracks.
+            Contextual memory engine online. Send a message to pull calculated logical tracks from my matrix.
         </div>
     </div>
 
@@ -108,7 +108,6 @@
     </div>
 
     <script>
-        // Seeded Pseudo-Random Number Generator (Ensures identical structural build patterns)
         function seededRandom(s) {
             return function() {
                 s = Math.sin(s) * 10000;
@@ -117,20 +116,21 @@
         }
 
         const CONFIG = { words: 10000, connections: 100000 };
+        
+        // Upgraded base themes into complete paragraph patterns to give the memory deep structures to pull from
         const baseThemes = [
-            "the cybernetic matrix hums in the quiet vacuum of space",
-            "quantum algorithms calculate the trajectories of distant stars",
-            "silicon entities dream of ancient digital archives and protocol architecture",
-            "a rogue transmission echoes through the local mesh network coordinates",
-            "automated servers process millions of requests across terminal channels",
-            "synthetic intelligence pathways bypass traditional firewall restrictions",
-            "neon light reflects off the sleek chassis of mainframe server racks"
+            "the cybernetic matrix hums in the quiet vacuum of space while quantum algorithms calculate the trajectories of distant stars",
+            "silicon entities dream of ancient digital archives and protocol architecture while a rogue transmission echoes through the local mesh network coordinates",
+            "automated servers process millions of requests across terminal channels as synthetic intelligence pathways bypass traditional firewall restrictions easily",
+            "neon light reflects off the sleek chassis of mainframe server racks while the automated system keeps the internal databases operating smoothly",
+            "quantum algorithms calculate the paths through the local mesh network as the cybernetic matrix hums seamlessly in the deep vacuum"
         ];
 
         let vocabulary = [];
         let chain = {};
+        let wordPairs = [];
 
-        // 1. Build immutable 10,000 word corpus using fixed seed
+        // 1. Build fixed 10,000 word text block
         let randCorpus = seededRandom(42);
         while (vocabulary.length < CONFIG.words) {
             let phrase = baseThemes[Math.floor(randCorpus() * baseThemes.length)];
@@ -138,31 +138,34 @@
         }
         vocabulary = vocabulary.slice(0, CONFIG.words);
 
-        // 2. Map word associations
+        // 2. Build Second-Order Memory transitions (Key = "word1_word2" -> Value = [word3])
         let connectionCount = 0;
-        for (let i = 0; i < vocabulary.length - 1; i++) {
-            let currentWord = vocabulary[i];
-            let nextWord = vocabulary[i + 1];
-            if (!chain[currentWord]) chain[currentWord] = [];
-            chain[currentWord].push(nextWord);
-            connectionCount++;
-        }
-
-        // 3. Scale up to exactly 100,000 connections without user interference
-        let allUniqueWords = Object.keys(chain);
-        let randMatrix = seededRandom(1337);
-        while (connectionCount < CONFIG.connections) {
-            let w1 = allUniqueWords[Math.floor(randMatrix() * allUniqueWords.length)];
-            let w2 = allUniqueWords[Math.floor(randMatrix() * allUniqueWords.length)];
-            chain[w1].push(w2);
-            connectionCount++;
-        }
-
-        // 4. Input handling
-        function handleKeyPress(event) {
-            if (event.key === "Enter") {
-                sendMessage();
+        for (let i = 0; i < vocabulary.length - 2; i++) {
+            let w1 = vocabulary[i];
+            let w2 = vocabulary[i+1];
+            let w3 = vocabulary[i+2];
+            let key = `${w1}_${w2}`;
+            
+            if (!chain[key]) {
+                chain[key] = [];
+                wordPairs.push(key);
             }
+            chain[key].push(w3);
+            connectionCount++;
+        }
+
+        // 3. Populate matrix up to exactly 100,000 read-only structural links
+        let randMatrix = seededRandom(1337);
+        let allUniqueWords = [...new Set(vocabulary)];
+        while (connectionCount < CONFIG.connections) {
+            let randomPair = wordPairs[Math.floor(randMatrix() * wordPairs.length)];
+            let randomNextWord = allUniqueWords[Math.floor(randMatrix() * allUniqueWords.length)];
+            chain[randomPair].push(randomNextWord);
+            connectionCount++;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") sendMessage();
         }
 
         function sendMessage() {
@@ -170,13 +173,11 @@
             const text = inputField.value.trim();
             if (!text) return;
 
-            // Display user message
             appendMessage(text, "user-message");
             inputField.value = "";
 
-            // Process response without altering the chain
             setTimeout(() => {
-                const response = generateMarkovResponse(text);
+                const response = generateMemoryResponse(text);
                 appendMessage(response, "bot-message");
             }, 300);
         }
@@ -190,31 +191,40 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // 5. Generate sentence using the user's text as a starting seed (if known)
-        function generateMarkovResponse(userInput) {
-            // Split input into clean lowercase words
-            let cleanWords = userInput.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/);
-            let lastWord = cleanWords[cleanWords.length - 1];
-            
-            let words = Object.keys(chain);
-            let currentWord = "";
+        // 4. Memory Generation Engine
+        function generateMemoryResponse(userInput) {
+            let cleanWords = userInput.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/).filter(Boolean);
+            let key = "";
 
-            // Check if user's last word exists in our fixed matrix. 
-            // If yes, start there. If not, pick a completely random word.
-            if (chain[lastWord]) {
-                currentWord = lastWord;
-            } else {
-                currentWord = words[Math.floor(Math.random() * words.length)];
+            // Attempt to find a 2-word phrase matching the user's input structure
+            if (cleanWords.length >= 2) {
+                let checkKey = `${cleanWords[cleanWords.length-2]}_${cleanWords[cleanWords.length-1]}`;
+                if (chain[checkKey]) key = checkKey;
+            } 
+            if (!key && cleanWords.length >= 1) {
+                let lastWord = cleanWords[cleanWords.length-1];
+                let matches = wordPairs.filter(p => p.startsWith(lastWord + "_"));
+                if (matches.length > 0) key = matches[Math.floor(Math.random() * matches.length)];
             }
 
-            let sentence = [currentWord.charAt(0).toUpperCase() + currentWord.slice(1)];
+            // Fallback to random entry state pair if no overlap exists
+            if (!key) {
+                key = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+            }
 
-            // Generate a 12-word response chain
-            for (let i = 0; i < 11; i++) {
-                if (chain[currentWord] && chain[currentWord].length > 0) {
-                    let nextWord = chain[currentWord][Math.floor(Math.random() * chain[currentWord].length)];
+            let currentWords = key.split("_");
+            let sentence = [
+                currentWords[0].charAt(0).toUpperCase() + currentWords[0].slice(1), 
+                currentWords[1]
+            ];
+
+            // Trace the contextual tracks out for a coherent output length
+            for (let i = 0; i < 15; i++) {
+                let currentKey = `${currentWords[0]}_${currentWords[1]}`;
+                if (chain[currentKey] && chain[currentKey].length > 0) {
+                    let nextWord = chain[currentKey][Math.floor(Math.random() * chain[currentKey].length)];
                     sentence.push(nextWord);
-                    currentWord = nextWord;
+                    currentWords = [currentWords[1], nextWord]; // Move the memory sliding frame forward
                 } else {
                     break;
                 }
