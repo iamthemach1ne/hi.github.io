@@ -2,64 +2,113 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>100k Markov Bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100k Markov Chat Bot</title>
     <style>
         body {
             font-family: 'Courier New', Courier, monospace;
             background-color: #0d1117;
             color: #c9d1d9;
             max-width: 700px;
-            margin: 40px auto;
+            margin: 20px auto;
             padding: 20px;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
         }
-        h1 { color: #58a6ff; }
+        h1 { color: #58a6ff; text-align: center; margin-bottom: 5px; }
         .stats {
             background-color: #161b22;
-            padding: 15px;
+            padding: 10px;
             border-radius: 6px;
             border: 1px solid #30363d;
             margin-bottom: 20px;
-            font-size: 14px;
+            font-size: 13px;
+            text-align: center;
+        }
+        #chat-container {
+            flex: 1;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .message {
+            padding: 10px 14px;
+            border-radius: 6px;
+            max-width: 80%;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #21262d;
+            border: 1px solid #30363d;
+            align-self: flex-end;
+            color: #ecf2f8;
+        }
+        .bot-message {
+            background-color: #1f2937;
+            border-left: 4px solid #58a6ff;
+            align-self: flex-start;
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+        input:focus {
+            outline: none;
+            border-color: #58a6ff;
         }
         button {
             background-color: #238636;
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 0 24px;
             font-size: 16px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
+            font-family: inherit;
         }
         button:hover { background-color: #2ea44f; }
-        #output-box {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #161b22;
-            border-left: 4px solid #58a6ff;
-            min-height: 50px;
-            text-align: left;
-            line-height: 1.6;
-        }
     </style>
 </head>
 <body>
 
-    <h1>🤖 Closed-Loop Markov Bot</h1>
+    <h1>🤖 Interactive Markov Bot</h1>
     
     <div class="stats">
-        <strong>System Constraints (Locked):</strong><br>
-        Vocabulary Size: <span style="color:#58a6ff">10,000 words</span> | 
-        Probability Matrix: <span style="color:#58a6ff">100,000 connections</span>
+        <strong>Locked State Matrix:</strong> 10,000 words | 100,000 connections (Read-Only)
     </div>
 
-    <button onclick="generateSentence()">Generate Text</button>
+    <div id="chat-container">
+        <div class="message bot-message">
+            System initialized. I am online. Send a message to read my probability tracks.
+        </div>
+    </div>
 
-    <div id="output-box">Click the button above to generate a sentence from the matrix...</div>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Type a message here..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 
     <script>
-        // Seeded Pseudo-Random Number Generator to ensure identical structural boot patterns
+        // Seeded Pseudo-Random Number Generator (Ensures identical structural build patterns)
         function seededRandom(s) {
             return function() {
                 s = Math.sin(s) * 10000;
@@ -109,13 +158,59 @@
             connectionCount++;
         }
 
-        // 4. Client-side Generation Engine
-        function generateSentence() {
+        // 4. Input handling
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const inputField = document.getElementById("user-input");
+            const text = inputField.value.trim();
+            if (!text) return;
+
+            // Display user message
+            appendMessage(text, "user-message");
+            inputField.value = "";
+
+            // Process response without altering the chain
+            setTimeout(() => {
+                const response = generateMarkovResponse(text);
+                appendMessage(response, "bot-message");
+            }, 300);
+        }
+
+        function appendMessage(text, className) {
+            const container = document.getElementById("chat-container");
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `message ${className}`;
+            msgDiv.innerText = text;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 5. Generate sentence using the user's text as a starting seed (if known)
+        function generateMarkovResponse(userInput) {
+            // Split input into clean lowercase words
+            let cleanWords = userInput.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/);
+            let lastWord = cleanWords[cleanWords.length - 1];
+            
             let words = Object.keys(chain);
-            let currentWord = words[Math.floor(Math.random() * words.length)];
+            let currentWord = "";
+
+            // Check if user's last word exists in our fixed matrix. 
+            // If yes, start there. If not, pick a completely random word.
+            if (chain[lastWord]) {
+                currentWord = lastWord;
+            } else {
+                currentWord = words[Math.floor(Math.random() * words.length)];
+            }
+
             let sentence = [currentWord.charAt(0).toUpperCase() + currentWord.slice(1)];
 
-            for (let i = 0; i < 14; i++) {
+            // Generate a 12-word response chain
+            for (let i = 0; i < 11; i++) {
                 if (chain[currentWord] && chain[currentWord].length > 0) {
                     let nextWord = chain[currentWord][Math.floor(Math.random() * chain[currentWord].length)];
                     sentence.push(nextWord);
@@ -125,7 +220,7 @@
                 }
             }
 
-            document.getElementById("output-box").innerText = sentence.join(" ") + ".";
+            return sentence.join(" ") + ".";
         }
     </script>
 </body>
