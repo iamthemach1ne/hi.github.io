@@ -1,10 +1,132 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My First GitHub Site</title>
+    <meta charset="UTF-8">
+    <title>100k Markov Bot</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 { color: #58a6ff; }
+        .stats {
+            background-color: #161b22;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #238636;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background-color: #2ea44f; }
+        #output-box {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #161b22;
+            border-left: 4px solid #58a6ff;
+            min-height: 50px;
+            text-align: left;
+            line-height: 1.6;
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello, world!</h1>
-    <p>Welcome to my free website hosted on GitHub Pages.</p>
+
+    <h1>🤖 Closed-Loop Markov Bot</h1>
+    
+    <div class="stats">
+        <strong>System Constraints (Locked):</strong><br>
+        Vocabulary Size: <span style="color:#58a6ff">10,000 words</span> | 
+        Probability Matrix: <span style="color:#58a6ff">100,000 connections</span>
+    </div>
+
+    <button onclick="generateSentence()">Generate Text</button>
+
+    <div id="output-box">Click the button above to generate a sentence from the matrix...</div>
+
+    <script>
+        // Seeded Pseudo-Random Number Generator to ensure identical structural boot patterns
+        function seededRandom(s) {
+            return function() {
+                s = Math.sin(s) * 10000;
+                return s - Math.floor(s);
+            };
+        }
+
+        const CONFIG = { words: 10000, connections: 100000 };
+        const baseThemes = [
+            "the cybernetic matrix hums in the quiet vacuum of space",
+            "quantum algorithms calculate the trajectories of distant stars",
+            "silicon entities dream of ancient digital archives and protocol architecture",
+            "a rogue transmission echoes through the local mesh network coordinates",
+            "automated servers process millions of requests across terminal channels",
+            "synthetic intelligence pathways bypass traditional firewall restrictions",
+            "neon light reflects off the sleek chassis of mainframe server racks"
+        ];
+
+        let vocabulary = [];
+        let chain = {};
+
+        // 1. Build immutable 10,000 word corpus using fixed seed
+        let randCorpus = seededRandom(42);
+        while (vocabulary.length < CONFIG.words) {
+            let phrase = baseThemes[Math.floor(randCorpus() * baseThemes.length)];
+            vocabulary.push(...phrase.split(" "));
+        }
+        vocabulary = vocabulary.slice(0, CONFIG.words);
+
+        // 2. Map word associations
+        let connectionCount = 0;
+        for (let i = 0; i < vocabulary.length - 1; i++) {
+            let currentWord = vocabulary[i];
+            let nextWord = vocabulary[i + 1];
+            if (!chain[currentWord]) chain[currentWord] = [];
+            chain[currentWord].push(nextWord);
+            connectionCount++;
+        }
+
+        // 3. Scale up to exactly 100,000 connections without user interference
+        let allUniqueWords = Object.keys(chain);
+        let randMatrix = seededRandom(1337);
+        while (connectionCount < CONFIG.connections) {
+            let w1 = allUniqueWords[Math.floor(randMatrix() * allUniqueWords.length)];
+            let w2 = allUniqueWords[Math.floor(randMatrix() * allUniqueWords.length)];
+            chain[w1].push(w2);
+            connectionCount++;
+        }
+
+        // 4. Client-side Generation Engine
+        function generateSentence() {
+            let words = Object.keys(chain);
+            let currentWord = words[Math.floor(Math.random() * words.length)];
+            let sentence = [currentWord.charAt(0).toUpperCase() + currentWord.slice(1)];
+
+            for (let i = 0; i < 14; i++) {
+                if (chain[currentWord] && chain[currentWord].length > 0) {
+                    let nextWord = chain[currentWord][Math.floor(Math.random() * chain[currentWord].length)];
+                    sentence.push(nextWord);
+                    currentWord = nextWord;
+                } else {
+                    break;
+                }
+            }
+
+            document.getElementById("output-box").innerText = sentence.join(" ") + ".";
+        }
+    </script>
 </body>
 </html>
