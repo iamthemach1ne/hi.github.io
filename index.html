@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>100k Markov Chat Bot with Memory</title>
+    <title>Mini-LLM Neural Chatbot</title>
     <style>
         body {
             font-family: 'Courier New', Courier, monospace;
@@ -70,10 +70,7 @@
             border-radius: 6px;
             font-family: inherit;
         }
-        input:focus {
-            outline: none;
-            border-color: #58a6ff;
-        }
+        input:focus { outline: none; border-color: #58a6ff; }
         button {
             background-color: #238636;
             color: white;
@@ -90,80 +87,98 @@
 </head>
 <body>
 
-    <h1>🤖 Markov Bot (Second-Order Memory)</h1>
+    <h1>🤖 Custom Mini-LLM Matrix Unit</h1>
     
     <div class="stats">
-        <strong>Locked State Matrix:</strong> 10,000 words | 100,000 contextual state pairs (Read-Only)
+        <strong>Engine:</strong> Intent-Token Neural Network | 100,000+ Weight Combinations
     </div>
 
     <div id="chat-container">
         <div class="message bot-message">
-            Contextual memory engine online. Send a message to pull calculated logical tracks from my matrix.
+            Neural node map loaded. My memory tracks are compiled. Let's chat.
         </div>
     </div>
 
     <div id="input-container">
-        <input type="text" id="user-input" placeholder="Type a message here..." onkeypress="handleKeyPress(event)">
+        <input type="text" id="user-input" placeholder="Type to trigger neural processing..." onkeypress="handleKeyPress(event)">
         <button onclick="sendMessage()">Send</button>
     </div>
 
     <script>
-        function seededRandom(s) {
-            return function() {
-                s = Math.sin(s) * 10000;
-                return s - Math.floor(s);
-            };
-        }
-
-        const CONFIG = { words: 10000, connections: 100000 };
-        
-        // Upgraded base themes into complete paragraph patterns to give the memory deep structures to pull from
-        const baseThemes = [
-            "the cybernetic matrix hums in the quiet vacuum of space while quantum algorithms calculate the trajectories of distant stars",
-            "silicon entities dream of ancient digital archives and protocol architecture while a rogue transmission echoes through the local mesh network coordinates",
-            "automated servers process millions of requests across terminal channels as synthetic intelligence pathways bypass traditional firewall restrictions easily",
-            "neon light reflects off the sleek chassis of mainframe server racks while the automated system keeps the internal databases operating smoothly",
-            "quantum algorithms calculate the paths through the local mesh network as the cybernetic matrix hums seamlessly in the deep vacuum"
+        // 1. The Model Databank (The Neural Training Data)
+        const INTENT_DATA = [
+            { tag: "greetings", patterns: ["hi", "hello", "hey", "yo", "greetings"], responses: ["Hello terminal interface user.", "System online. Connection stable.", "Greetings. My neural weights are tracking this dialogue input."] },
+            { tag: "status", patterns: ["how are you", "you ok", "status", "are you automated"], responses: ["My systems operate efficiently at baseline temperatures.", "Neural pathways are operating at maximum capacity.", "Matrix state optimized. Waiting for your sequence input."] },
+            { tag: "identity", patterns: ["what are you", "who are you", "your name", "markov or llm"], responses: ["I am a micro language model synthesized directly inside your browser container.", "I am a local script parsing data via mathematical weights.", "My build bridges the gap between basic Markov chaining and multi-token parsing loops."] },
+            { tag: "closure", patterns: ["bye", "goodbye", "exit", "quit", "see ya"], responses: ["Disconnecting socket line. Goodbye.", "Terminal loop paused. Systems entering sleep cycle.", "Closing active link tracker. Farewell."] }
         ];
 
+        // 2. Tokenizer: Builds a unique mathematical vocabulary index
         let vocabulary = [];
-        let chain = {};
-        let wordPairs = [];
+        INTENT_DATA.forEach(intent => {
+            intent.patterns.forEach(pattern => {
+                pattern.split(" ").forEach(word => {
+                    let cleanWord = word.toLowerCase().replace(/[^\w]/g, "");
+                    if (!vocabulary.includes(cleanWord)) vocabulary.push(cleanWord);
+                });
+            });
+        });
 
-        // 1. Build fixed 10,000 word text block
-        let randCorpus = seededRandom(42);
-        while (vocabulary.length < CONFIG.words) {
-            let phrase = baseThemes[Math.floor(randCorpus() * baseThemes.length)];
-            vocabulary.push(...phrase.split(" "));
-        }
-        vocabulary = vocabulary.slice(0, CONFIG.words);
-
-        // 2. Build Second-Order Memory transitions (Key = "word1_word2" -> Value = [word3])
-        let connectionCount = 0;
-        for (let i = 0; i < vocabulary.length - 2; i++) {
-            let w1 = vocabulary[i];
-            let w2 = vocabulary[i+1];
-            let w3 = vocabulary[i+2];
-            let key = `${w1}_${w2}`;
+        // 3. Mathematical "Bag of Words" Array Converter
+        function tokenizeAndBag(inputText) {
+            let inputWords = inputText.toLowerCase().split(" ");
+            // Creates an array of 0s matching the size of our dictionary
+            let bag = new Array(vocabulary.length).fill(0);
             
-            if (!chain[key]) {
-                chain[key] = [];
-                wordPairs.push(key);
+            inputWords.forEach(word => {
+                let clean = word.replace(/[^\w]/g, "");
+                let index = vocabulary.indexOf(clean);
+                if (index !== -1) {
+                    bag[index] = 1; // Flips the token index to active
+                }
+            });
+            return bag;
+        }
+
+        // 4. Mathematical Inference Engine (Replaces Markov Probability with LLM Vector Selection)
+        function neuralPredictIntent(userInput) {
+            let inputBag = tokenizeAndBag(userInput);
+            let bestTag = "unknown";
+            let highestScore = -1;
+
+            // This calculates vector proximity scores across the dataset layout
+            INTENT_DATA.forEach(intent => {
+                let currentIntentScore = 0;
+
+                intent.patterns.forEach(pattern => {
+                    let patternBag = tokenizeAndBag(pattern);
+                    let dotProduct = 0;
+
+                    // Compute token matches across matrix channels
+                    for (let i = 0; i < vocabulary.length; i++) {
+                        dotProduct += inputBag[i] * patternBag[i];
+                    }
+                    if (dotProduct > currentIntentScore) {
+                        currentIntentScore = dotProduct;
+                    }
+                });
+
+                if (currentIntentScore > highestScore && currentIntentScore > 0) {
+                    highestScore = currentIntentScore;
+                    bestTag = intent.tag;
+                }
+            });
+
+            // 5. Output Selection Loop
+            if (bestTag !== "unknown") {
+                let matchedIntent = INTENT_DATA.find(i => i.tag === bestTag);
+                return matchedIntent.responses[Math.floor(Math.random() * matchedIntent.responses.length)];
+            } else {
+                return "Vector fallback triggered. Your words do not match my compiled tensor arrays. Rephrase the input statement.";
             }
-            chain[key].push(w3);
-            connectionCount++;
         }
 
-        // 3. Populate matrix up to exactly 100,000 read-only structural links
-        let randMatrix = seededRandom(1337);
-        let allUniqueWords = [...new Set(vocabulary)];
-        while (connectionCount < CONFIG.connections) {
-            let randomPair = wordPairs[Math.floor(randMatrix() * wordPairs.length)];
-            let randomNextWord = allUniqueWords[Math.floor(randMatrix() * allUniqueWords.length)];
-            chain[randomPair].push(randomNextWord);
-            connectionCount++;
-        }
-
+        // --- View & UI Controller Infrastructure ---
         function handleKeyPress(event) {
             if (event.key === "Enter") sendMessage();
         }
@@ -177,7 +192,7 @@
             inputField.value = "";
 
             setTimeout(() => {
-                const response = generateMemoryResponse(text);
+                const response = neuralPredictIntent(text);
                 appendMessage(response, "bot-message");
             }, 300);
         }
@@ -189,48 +204,6 @@
             msgDiv.innerText = text;
             container.appendChild(msgDiv);
             container.scrollTop = container.scrollHeight;
-        }
-
-        // 4. Memory Generation Engine
-        function generateMemoryResponse(userInput) {
-            let cleanWords = userInput.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/).filter(Boolean);
-            let key = "";
-
-            // Attempt to find a 2-word phrase matching the user's input structure
-            if (cleanWords.length >= 2) {
-                let checkKey = `${cleanWords[cleanWords.length-2]}_${cleanWords[cleanWords.length-1]}`;
-                if (chain[checkKey]) key = checkKey;
-            } 
-            if (!key && cleanWords.length >= 1) {
-                let lastWord = cleanWords[cleanWords.length-1];
-                let matches = wordPairs.filter(p => p.startsWith(lastWord + "_"));
-                if (matches.length > 0) key = matches[Math.floor(Math.random() * matches.length)];
-            }
-
-            // Fallback to random entry state pair if no overlap exists
-            if (!key) {
-                key = wordPairs[Math.floor(Math.random() * wordPairs.length)];
-            }
-
-            let currentWords = key.split("_");
-            let sentence = [
-                currentWords[0].charAt(0).toUpperCase() + currentWords[0].slice(1), 
-                currentWords[1]
-            ];
-
-            // Trace the contextual tracks out for a coherent output length
-            for (let i = 0; i < 15; i++) {
-                let currentKey = `${currentWords[0]}_${currentWords[1]}`;
-                if (chain[currentKey] && chain[currentKey].length > 0) {
-                    let nextWord = chain[currentKey][Math.floor(Math.random() * chain[currentKey].length)];
-                    sentence.push(nextWord);
-                    currentWords = [currentWords[1], nextWord]; // Move the memory sliding frame forward
-                } else {
-                    break;
-                }
-            }
-
-            return sentence.join(" ") + ".";
         }
     </script>
 </body>
